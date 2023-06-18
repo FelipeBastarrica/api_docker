@@ -1,0 +1,9 @@
+Pillow
+numpy
+fastapi
+uvicorn
+typing-extensions
+pydantic
+tensorflow
+keras
+python-multipart
