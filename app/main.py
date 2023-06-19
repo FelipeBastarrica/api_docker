@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException
-from fastapi import File, UploadFile
+from fastapi import File, UploadFile, Form
 from keras.preprocessing import image
 from keras.models import load_model
 import numpy as np
@@ -20,19 +20,28 @@ except Exception as e:
 async def health_check():
     return {"status": "OK"}
 
-
 @app.post('/predict')
-async def predict(image_file: UploadFile = File(...)):
+async def predict(rooms: str = Form(...), meters: str = Form(...), image_file: UploadFile = File(...)):
     if not model:
         raise HTTPException(status_code=500, detail="Model could not be loaded")
     try:
         image = Image.open(image_file.file)
+        image = image.resize((180, 180))
         image = np.expand_dims(image, axis=0)
+        print(image)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error processing image: {e}")
 
     try:
-        predictions = model.predict(image)
+        #print(data['rooms'])
+        #print(data['meters'])
+        tabular = np.expand_dims([rooms,meters], axis=0).astype(float)
+
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error processing tabular: {e}")
+
+    try:
+        predictions = model.predict([image,tabular])
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error making prediction: {e}")
 
