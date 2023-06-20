@@ -5,8 +5,12 @@ from keras.models import load_model
 import numpy as np
 from PIL import Image
 import uvicorn
+import zipfile
+import csv
+
 
 print('STARTING APP')
+classes = ["HOUSES","APARTMENT"]
 
 app = FastAPI()
 
@@ -33,8 +37,6 @@ async def predict(rooms: str = Form(...), meters: str = Form(...), image_file: U
         raise HTTPException(status_code=400, detail=f"Error processing image: {e}")
 
     try:
-        #print(data['rooms'])
-        #print(data['meters'])
         tabular = np.expand_dims([rooms,meters], axis=0).astype(float)
 
     except Exception as e:
@@ -58,33 +60,49 @@ async def predict(file: UploadFile = File(...)):
     if not model:
         raise HTTPException(status_code=500, detail="Model could not be loaded")
     try:
-        image = Image.open(image_file.file)
-        image = image.resize((180, 180))
-        image = np.expand_dims(image, axis=0)
-        print(image)
+        with zipfile.ZipFile(file.file, 'r') as zip_ref:
+            zip_ref.extractall(file.file)
+
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error processing image: {e}")
+        raise HTTPException(status_code=400, detail=f"Error processing file: {e}")
 
     try:
-        #print(data['rooms'])
-        #print(data['meters'])
-        tabular = np.expand_dims([rooms,meters], axis=0).astype(float)
+        predictions_classes = []
+        with open('table.csv') as file_obj:
+            reader_obj = csv.reader(file_obj)
+            for row in reader_obj:
+                row_splitted = row.split(",")
 
+                try:
+                    image = Image.open("images/"+row_splitted)
+                    image = image.resize((180, 180))
+                    image = np.expand_dims(image, axis=0)
+                    print(image)
+                except Exception as e:
+                    raise HTTPException(status_code=400, detail=f"Error processing image: {e}")
+
+                try:
+                    tabular = np.expand_dims([row_splitted[1],row_splitted[2]], axis=0).astype(float)
+
+                except Exception as e:
+                    raise HTTPException(status_code=400, detail=f"Error processing tabular: {e}")
+
+                try:
+                    predictions = model.predict([image,tabular])
+                except Exception as e:
+                    raise HTTPException(status_code=500, detail=f"Error making prediction: {e}")
+
+                try:
+                    # Obten la clase con mayor score
+                    predictions_classes.append(np.argmax(predictions[0]))
+                except Exception as e:
+                    raise HTTPException(status_code=500, detail=f"Error interpreting prediction: {e}")
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error processing tabular: {e}")
+        raise HTTPException(status_code=500, detail=f"Error in CSV reader: {e}")
 
-    try:
-        predictions = model.predict([image,tabular])
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error making prediction: {e}")
 
-    try:
-        # Obten la clase con mayor score
-        predicted_class = np.argmax(predictions[0])
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error interpreting prediction: {e}")
 
-    return {"predicted_class": int(predicted_class)}
+    return {"predicted_class": predictions_classes}
 
 
 if __name__ == "__main__":
