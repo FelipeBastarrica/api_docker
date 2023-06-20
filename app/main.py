@@ -8,6 +8,7 @@ import uvicorn
 import zipfile
 import csv, os
 import tempfile
+import stat
 
 
 print('STARTING APP')
@@ -56,54 +57,67 @@ async def predict(rooms: str = Form(...), meters: str = Form(...), image_file: U
 
     return {"predicted_class": int(predicted_class)}
 
+def extract_zip(file_path):
+    with zipfile.ZipFile(file_path, 'r') as zip_ref:
+        zip_ref.extractall(os.path.dirname(file_path))
+
 @app.post('/predict_batch')
 async def predict(file: UploadFile = File(...)):
     if not model:
         raise HTTPException(status_code=500, detail="Model could not be loaded")
     try:
-        with zipfile.ZipFile(file.file, 'r') as zip_ref:
-            t_dir = tempfile.TemporaryDirectory()
-            path = os.path.join(t_dir.name, file.file)
-            zip_ref.extractall(path)
+        # Save the uploaded zip file
+        file_path = f"{file.filename}"
+        with open(file_path, "wb") as f:
+            f.write(await file.read())
+           
+         # Extract the contents of the zip file
+        extract_zip(file_path)
+           #with zipfile.ZipFile(str(file.file), 'r') as zip_ref:
+            #t_dir = tempfile.TemporaryDirectory()
+            #path = os.path.join(t_dir.name, str(file.file))
+            #zip_ref.extractall()
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error processing file: {e}")
 
-    try:
-        predictions_classes = []
-        with open('table.csv') as file_obj:
-            reader_obj = csv.reader(file_obj)
-            for row in reader_obj:
-                row_splitted = row.split(",")
+    #try:
+    predictions_classes = []
+    os.chmod('table.csv', stat.S_IRWXU)
+    with open('table.csv', encoding='utf-8-sig') as file_obj:
+        reader_obj = csv.reader(file_obj)
+           # try: 
+        for row in reader_obj:
+                 #row_splitted = row.split(",")
+                   # predictions_classes.append(row[0])
+                    
+            try:
+                image = Image.open("images/"+row[0])#row_splitted)
+                image = image.resize((180, 180))
+                image = np.expand_dims(image, axis=0)
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"Error processing image: {e}")
 
-                try:
-                    image = Image.open("images/"+row_splitted)
-                    image = image.resize((180, 180))
-                    image = np.expand_dims(image, axis=0)
-                    print(image)
-                except Exception as e:
-                    raise HTTPException(status_code=400, detail=f"Error processing image: {e}")
+            try:
+                tabular = np.expand_dims([row[1],row[2]], axis=0).astype(float)
 
-                try:
-                    tabular = np.expand_dims([row_splitted[1],row_splitted[2]], axis=0).astype(float)
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"Error processing tabular: {e}")
 
-                except Exception as e:
-                    raise HTTPException(status_code=400, detail=f"Error processing tabular: {e}")
+            try:
+                predictions = model.predict([image,tabular])
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Error making prediction: {e}")
 
-                try:
-                    predictions = model.predict([image,tabular])
-                except Exception as e:
-                    raise HTTPException(status_code=500, detail=f"Error making prediction: {e}")
-
-                try:
-                    # Obten la clase con mayor score
-                    predictions_classes.append(np.argmax(predictions[0]))
-                except Exception as e:
-                    raise HTTPException(status_code=500, detail=f"Error interpreting prediction: {e}")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error in CSV reader: {e}")
-
-
+            try:
+                        # Obten la clase con mayor score
+                predictions_classes.append(np.argmax(predictions[0]))
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Error interpreting prediction: {e}")
+            #except Exception as e:
+            #    raise HTTPException(status_code=500, detail=f"Error after with csv: {e}")            
+    #except Exception as e:
+    #    raise HTTPException(status_code=500, detail=f"Error in CSV reader: {e}")
 
     return {"predicted_class": predictions_classes}
 
