@@ -53,6 +53,40 @@ async def predict(rooms: str = Form(...), meters: str = Form(...), image_file: U
 
     return {"predicted_class": int(predicted_class)}
 
+@app.post('/predict_batch')
+async def predict(file: UploadFile = File(...)):
+    if not model:
+        raise HTTPException(status_code=500, detail="Model could not be loaded")
+    try:
+        image = Image.open(image_file.file)
+        image = image.resize((180, 180))
+        image = np.expand_dims(image, axis=0)
+        print(image)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error processing image: {e}")
+
+    try:
+        #print(data['rooms'])
+        #print(data['meters'])
+        tabular = np.expand_dims([rooms,meters], axis=0).astype(float)
+
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error processing tabular: {e}")
+
+    try:
+        predictions = model.predict([image,tabular])
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error making prediction: {e}")
+
+    try:
+        # Obten la clase con mayor score
+        predicted_class = np.argmax(predictions[0])
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error interpreting prediction: {e}")
+
+    return {"predicted_class": int(predicted_class)}
+
+
 if __name__ == "__main__":
     import uvicorn  
     uvicorn.run(app, host="0.0.0.0", port=80)
