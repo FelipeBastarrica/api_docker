@@ -6,7 +6,8 @@ import numpy as np
 from PIL import Image
 import uvicorn
 import zipfile
-import csv
+import csv, os
+import tempfile
 
 
 print('STARTING APP')
@@ -61,7 +62,9 @@ async def predict(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail="Model could not be loaded")
     try:
         with zipfile.ZipFile(file.file, 'r') as zip_ref:
-            zip_ref.extractall(file.file)
+            t_dir = tempfile.TemporaryDirectory()
+            path = os.path.join(t_dir.name, file.file)
+            zip_ref.extractall(path)
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error processing file: {e}")
