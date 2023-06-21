@@ -104,15 +104,15 @@ async def predict(file: UploadFile = File(...)):
             except Exception as e:
                 raise HTTPException(status_code=400, detail=f"Error processing tabular: {e}")
             #predictions_classes.append(row[0])
-            
+            '''
             try:
                 predictions = model.predict([image,tabular])
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"Error making prediction: {e}")
-
+            '''
             try:
                         # Obten la clase con mayor score
-                predictions_classes.append(predictions)
+                predictions_classes.append(row[0])
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"Error interpreting prediction: {e}")
             #except Exception as e:
