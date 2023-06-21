@@ -54,7 +54,7 @@ async def predict(rooms: str = Form(...), meters: str = Form(...), image_file: U
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error interpreting prediction: {e}")
 
-    return {"predicted_class": int(predicted_class)}
+    return {"predicted_class": classes[int(predicted_class)]}
 
 def extract_zip(file_path):
     with zipfile.ZipFile(file_path, 'r') as zip_ref:
@@ -111,7 +111,7 @@ async def predict(file: UploadFile = File(...)):
             
             try:
                         # Obten la clase con mayor score
-                predictions_classes.append(predictions)
+                predictions_classes.append(classes[int(np.argmax(predictions[0]))])
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"Error interpreting prediction: {e}")
             #except Exception as e:
