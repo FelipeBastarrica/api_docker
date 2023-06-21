@@ -34,7 +34,6 @@ async def predict(rooms: str = Form(...), meters: str = Form(...), image_file: U
         image = Image.open(image_file.file)
         image = image.resize((180, 180))
         image = np.expand_dims(image, axis=0)
-        print(image)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error processing image: {e}")
 
@@ -99,20 +98,20 @@ async def predict(file: UploadFile = File(...)):
                 raise HTTPException(status_code=400, detail=f"Error processing image: {e}")
 
             try:
-                tabular = np.expand_dims([row[1],row[2]], axis=0).astype(float)
+                tabular = np.expand_dims([str(row[1]),str(row[2])], axis=0).astype(float)
 
             except Exception as e:
                 raise HTTPException(status_code=400, detail=f"Error processing tabular: {e}")
             #predictions_classes.append(row[0])
-            '''
+            
             try:
                 predictions = model.predict([image,tabular])
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"Error making prediction: {e}")
-            '''
+            
             try:
                         # Obten la clase con mayor score
-                predictions_classes.append(row[0])
+                predictions_classes.append(predictions)
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"Error interpreting prediction: {e}")
             #except Exception as e:
