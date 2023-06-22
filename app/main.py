@@ -40,7 +40,7 @@ async def predict(rooms: str = Form(...), meters: str = Form(...), image_file: U
     # Loading image
     try:
         image = Image.open(image_file.file)
-        image = image.resize((180, 180))
+        image = image.resize((180, 180))/ 255.0
         image = np.expand_dims(image, axis=0)
         logging.info("Image loaded")
     except Exception as e:
@@ -102,7 +102,7 @@ async def predict(file: UploadFile = File(...)):
                 # Loading Image
                 try:
                     image = Image.open("images/"+row[0])
-                    image = image.resize((180, 180))
+                    image = image.resize((180, 180))/ 255.0
                     image = np.expand_dims(image, axis=0)
                     logging.info("Image loaded")
                 except Exception as e:
