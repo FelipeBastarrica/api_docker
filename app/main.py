@@ -16,8 +16,24 @@ logging.basicConfig(filename="app.log", level=logging.INFO)
 logging.info("Starting APP")
 
 classes = ["HOUSES","APARTMENT"]
+description = """
+## Obligatorio
 
-app = FastAPI()
+API implementada para poder predecir, a partir de datos tabulares e imágenes, si una propiedad es una Casa o un Apartamento.
+
+"""
+app = FastAPI(
+    title="Machine Learning en Producción",
+    description=description,
+    version="0.0.1",
+    #terms_of_service="http://example.com/terms/",
+    contact={
+        "name": "Felipe Bastarrica, Aldo Giosa, Esteban Maestro",
+        "url": "https://github.com/FelipeBastarrica/api_docker.git",
+        "email": "bastarrica.felipe@gmail.com, aldini1000@gmail.com, emaestro11@gmail.com",
+    }
+
+)
 
 try:
     model = load_model('model.h5')
