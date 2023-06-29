@@ -2,7 +2,7 @@
 
 ## Machine Learning en Producción
 
-Integrantes: Felipe Bastarrica (158687), Aldo Gioda (285961), Esteban Maestro (150882)
+Integrantes: Felipe Bastarrica (158687), Aldo Giosa (285961), Esteban Maestro (150882)
 
 Repositorio que contiene el Docker File para la ejecución del Endpoint FastAPI. 
 
@@ -15,3 +15,4 @@ Creación y ejecución de imagen de docker para la FastAPI:
 Se dejan dos máquinas virtuales levantadas donde se deja corriendo el endpoint:
 
 http://20.127.164.137:8080/docs
+http://172.190.9.165:8080/docs
