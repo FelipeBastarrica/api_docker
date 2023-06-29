@@ -5,5 +5,5 @@ uvicorn
 typing-extensions
 pydantic
 tensorflow
-keras
+#keras
 python-multipart
