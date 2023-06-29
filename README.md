@@ -11,3 +11,7 @@ Creación y ejecución de imagen de docker para la FastAPI:
 * docker build -t api:latest .
 
 * docker run --restart always -d -p 8080:80 api:latest
+
+Se dejan dos máquinas virtuales levantadas donde se deja corriendo el endpoint:
+
+http://20.127.164.137:8080/docs
