@@ -15,4 +15,5 @@ Creación y ejecución de imagen de docker para la FastAPI:
 Se dejan dos máquinas virtuales levantadas donde se deja corriendo el endpoint:
 
 http://20.127.164.137:8080/docs
+
 http://172.190.9.165:8080/docs
